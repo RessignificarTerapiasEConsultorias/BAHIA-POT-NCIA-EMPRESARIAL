@@ -429,6 +429,20 @@ button{font:inherit;cursor:pointer;border:1px solid transparent}
 
 </div>
 
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+const app = initializeApp({
+  apiKey: "AIzaSyDsgeSvBLdTEpBQO47BjV5xApXqB3xlYbU",
+  authDomain: "bahiapotenciaempresarial-2db7c.firebaseapp.com",
+  projectId: "bahiapotenciaempresarial-2db7c",
+  storageBucket: "bahiapotenciaempresarial-2db7c.firebasestorage.app",
+  messagingSenderId: "893653774876",
+  appId: "1:893653774876:web:6d137dc06dea103f5da5d9"
+});
+const db = getFirestore(app);
+window.salvarFirestore = (r) => addDoc(collection(db, "respostas"), { ...r, criadoEm: serverTimestamp() });
+</script>
 <script>
 /* ===========================================================
    CONFIG — preencha antes de publicar.
@@ -750,14 +764,15 @@ form.addEventListener("submit",e=>{
       resposta.notas[item] = sel ? sel.value : "";
     });
 
+    /* Firestore é o registro principal; o Apps Script segue como cópia (planilha). */
     fetch(CONFIG.appsScriptUrl, {
       method: "POST",
       headers: {"Content-Type":"text/plain;charset=utf-8"},
       body: JSON.stringify(resposta)
-    })
-    .then(r => r.json())
-    .then(r => { if (r && r.ok) concluir(); else falhou(); })
-    .catch(falhou);
+    }).catch(()=>{});
+
+    if (!window.salvarFirestore){ falhou(); return; }
+    window.salvarFirestore(resposta).then(concluir).catch(falhou);
     return;
   }
 

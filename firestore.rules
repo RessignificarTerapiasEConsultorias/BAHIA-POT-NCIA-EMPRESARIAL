@@ -1,0 +1,19 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Formulário público: qualquer pessoa pode ENVIAR uma resposta,
+    // mas ninguém consegue ler, alterar ou apagar pelo navegador.
+    match /respostas/{id} {
+      allow create: if request.resource.data.keys().hasAll(['email','nome'])
+                    && request.resource.data.email is string
+                    && request.resource.data.email.size() < 200
+                    && request.resource.data.nome is string
+                    && request.resource.data.nome.size() < 200
+                    && request.resource.data.size() < 30;
+      allow read, update, delete: if false;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
