@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>BPE 26 — Área restrita</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--black:#000;--surface:#0C0A08;--surface-2:#141010;--line:#2A211A;--line-lit:#4A3524;--copper:#D88A48;--copper-hi:#F0A862;--copper-lo:#905424;--white:#fff;--soft:#B9ADA2;--dim:#6F655C;--err:#FF6B4A;--ok:#6FCF97}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--black);color:var(--white);font-family:Inter,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+h1,h2{font-family:"Instrument Serif",serif;font-weight:400;margin:0}
+button,input{font:inherit}
+.hide{display:none!important}
+/* login */
+.login{min-height:100vh;display:grid;place-items:center;padding:24px}
+.card{width:100%;max-width:400px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:32px 28px}
+.card h1{font-size:34px;margin-bottom:6px}
+.card p{color:var(--soft);margin:0 0 22px;font-size:15px}
+label{display:block;font-size:13px;color:var(--soft);margin:14px 0 6px}
+input[type=email],input[type=password],input[type=search]{width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;color:var(--white);padding:14px 16px;font-size:16px;outline:none}
+input:focus{border-color:var(--copper)}
+.btn{width:100%;margin-top:22px;border:0;border-radius:999px;padding:15px 24px;font-weight:600;font-size:16px;color:#1A0E04;background:linear-gradient(160deg,var(--copper-hi),var(--copper) 45%,var(--copper-lo));cursor:pointer}
+.btn:disabled{opacity:.6}
+.msg{color:var(--err);font-size:14px;margin-top:14px;min-height:20px}
+/* painel */
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px clamp(16px,4vw,32px);border-bottom:1px solid var(--line);flex-wrap:wrap}
+header h2{font-size:26px}
+header .who{color:var(--soft);font-size:13px;display:flex;gap:14px;align-items:center}
+.link{background:none;border:1px solid var(--line-lit);color:var(--copper-hi);border-radius:999px;padding:7px 16px;cursor:pointer;font-size:13px}
+main{padding:clamp(16px,4vw,32px);max-width:1400px;margin:0 auto}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:24px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 18px}
+.stat b{display:block;font-family:"Instrument Serif",serif;font-weight:400;font-size:38px;color:var(--copper-hi);line-height:1.1}
+.stat span{color:var(--soft);font-size:13px}
+.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.tabs{display:flex;gap:6px}
+.tab{background:none;border:1px solid var(--line);color:var(--soft);padding:9px 18px;border-radius:999px;cursor:pointer}
+.tab.on{background:var(--copper);color:#1A0E04;border-color:var(--copper);font-weight:600}
+.bar input{flex:1;min-width:200px;max-width:380px;padding:10px 16px}
+.count{color:var(--dim);font-size:13px;margin-left:auto}
+.wrap{overflow:auto;border:1px solid var(--line);border-radius:16px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{position:sticky;top:0;background:var(--surface-2);color:var(--soft);font-weight:500;white-space:nowrap;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+tr.row{cursor:pointer}tr.row:hover td{background:var(--surface-2)}
+td.nw{white-space:nowrap}
+.pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;border:1px solid var(--line-lit)}
+.p-Promotor{color:var(--ok);border-color:var(--ok)}.p-Detrator{color:var(--err);border-color:var(--err)}
+.detail td{background:var(--surface-2);white-space:normal}
+.detail dl{margin:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px 24px}
+.detail dt{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.05em}
+.detail dd{margin:2px 0 0;color:var(--white);word-break:break-word;white-space:pre-wrap}
+.empty{padding:40px;text-align:center;color:var(--dim)}
+</style>
+</head>
+<body>
+
+<section class="login" id="login">
+  <form class="card" id="fl" novalidate>
+    <h1>Área restrita</h1>
+    <p>Acesso às respostas do BPE 26.</p>
+    <label for="em">E-mail</label>
+    <input id="em" type="email" autocomplete="username" required>
+    <label for="pw">Senha</label>
+    <input id="pw" type="password" autocomplete="current-password" required>
+    <button class="btn" id="go" type="submit">Entrar</button>
+    <div class="msg" id="msg" role="alert"></div>
+  </form>
+</section>
+
+<section class="hide" id="app">
+  <header>
+    <h2>BPE 26 · Respostas</h2>
+    <div class="who"><span id="quem"></span><button class="link" id="sair">Sair</button></div>
+  </header>
+  <main>
+    <div class="stats" id="stats"></div>
+    <div class="bar">
+      <div class="tabs">
+        <button class="tab on" data-t="todas">Todas as respostas</button>
+        <button class="tab" data-t="mentoria">Interesse em mentoria</button>
+      </div>
+      <input type="search" id="q" placeholder="Buscar por nome, e-mail, Instagram…">
+      <span class="count" id="count"></span>
+    </div>
+    <div class="wrap"><table><thead id="th"></thead><tbody id="tb"></tbody></table><div class="empty hide" id="empty">Nenhuma resposta encontrada.</div></div>
+  </main>
+</section>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+import { getFirestore, collection, getDocs, orderBy, query } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyDsgeSvBLdTEpBQO47BjV5xApXqB3xlYbU",
+  authDomain: "bahiapotenciaempresarial-2db7c.firebaseapp.com",
+  projectId: "bahiapotenciaempresarial-2db7c",
+  storageBucket: "bahiapotenciaempresarial-2db7c.firebasestorage.app",
+  messagingSenderId: "893653774876",
+  appId: "1:893653774876:web:6d137dc06dea103f5da5d9"
+});
+const auth = getAuth(app), db = getFirestore(app);
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+/* ---------- login ---------- */
+$("fl").addEventListener("submit", async e => {
+  e.preventDefault();
+  const btn = $("go"), msg = $("msg");
+  msg.textContent = ""; btn.disabled = true; btn.textContent = "Entrando…";
+  try {
+    await signInWithEmailAndPassword(auth, $("em").value.trim(), $("pw").value);
+  } catch (err) {
+    msg.textContent = ["auth/invalid-credential","auth/wrong-password","auth/user-not-found","auth/invalid-email"].includes(err.code)
+      ? "E-mail ou senha incorretos." : "Não foi possível entrar agora. Tente de novo.";
+    btn.disabled = false; btn.textContent = "Entrar";
+  }
+});
+$("sair").addEventListener("click", () => signOut(auth));
+
+onAuthStateChanged(auth, async user => {
+  $("login").classList.toggle("hide", !!user);
+  $("app").classList.toggle("hide", !user);
+  $("go").disabled = false; $("go").textContent = "Entrar"; $("pw").value = "";
+  if (!user) return;
+  $("quem").textContent = user.email;
+  try {
+    const snap = await getDocs(query(collection(db, "respostas"), orderBy("criadoEm", "desc")));
+    dados = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    pintar();
+  } catch (err) {
+    await signOut(auth);
+    $("msg").textContent = "Este e-mail não tem permissão para ver as respostas.";
+  }
+});
+
+/* ---------- painel ---------- */
+let dados = [], aba = "todas";
+const NOTAS = ["Conteúdo das palestras","Palestrantes","Organização e credenciamento","Estrutura do local (CECBA)","Networking com outros participantes","Custo-benefício do ingresso","Transformação Pessoal"];
+const CAMPOS = [["whatsapp","WhatsApp"],["ig_empresa","Instagram da empresa"],["ig_pessoal","Instagram pessoal"],["conheceu","Como conheceu o BPE"],["ingresso","Ingresso"],["marcou","O que mais marcou"],["palestrante","Palestrante que mais impactou"],["aplicou","Já aplicou o que aprendeu"],["acompanhamento","Interesse em acompanhamento"],["quer2027","O que quer ver em 2027"],["melhorar","O que podemos melhorar"],["avisado","Quer ser avisado do 1º lote"],["patrocinar","Interesse em patrocinar ou expor"]];
+
+const data = r => { const t = r.criadoEm?.toDate?.(); return t ? t.toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"}) : ""; };
+const nps = r => { const n = Number(r.nps); return isNaN(n) || r.nps === "" ? null : n; };
+const classe = r => { const n = nps(r); return n === null ? "" : n >= 9 ? "Promotor" : n >= 7 ? "Neutro" : "Detrator"; };
+const querMentoria = r => !!r.mentoria_status || /^sim.*mentoria/i.test(r.acompanhamento || "");
+const lista = () => aba === "mentoria" ? dados.filter(querMentoria) : dados;
+
+function pintar(){
+  const todas = dados, ns = todas.map(nps).filter(n => n !== null);
+  const pro = ns.filter(n => n >= 9).length, det = ns.filter(n => n <= 6).length;
+  const score = ns.length ? Math.round((pro - det) / ns.length * 100) : "–";
+  const media = ns.length ? (ns.reduce((a,b)=>a+b,0)/ns.length).toFixed(1).replace(".",",") : "–";
+  const mentoria = todas.filter(querMentoria).length;
+  const patro = todas.filter(r => /^sim/i.test(r.patrocinar || "")).length;
+  $("stats").innerHTML = [[todas.length,"respostas"],[score,"NPS"],[media,"nota média (0-10)"],[mentoria,"interesse em mentoria"],[patro,"querem patrocinar/expor"]]
+    .map(([v,l]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join("");
+
+  const ment = aba === "mentoria";
+  $("th").innerHTML = "<tr><th>Data</th><th>Nome</th><th>E-mail</th><th>WhatsApp</th><th>Ingresso</th><th>Nota</th>" + (ment ? "<th>Status</th>" : "") + "</tr>";
+  const busca = $("q").value.trim().toLowerCase();
+  const linhas = lista().filter(r => !busca || [r.nome,r.email,r.ig_empresa,r.ig_pessoal,r.whatsapp].some(x => String(x||"").toLowerCase().includes(busca)));
+  $("count").textContent = linhas.length + " de " + lista().length;
+  $("empty").classList.toggle("hide", linhas.length > 0);
+  $("tb").innerHTML = linhas.map(r => {
+    const n = nps(r), c = classe(r);
+    return `<tr class="row" data-id="${esc(r.id)}"><td class="nw">${esc(data(r))}</td><td>${esc(r.nome)}</td><td>${esc(r.email)}</td><td class="nw">${esc(r.whatsapp)}</td><td>${esc(r.ingresso)}</td>
+      <td class="nw">${n ?? ""} ${c ? `<span class="pill p-${c}">${c}</span>` : ""}</td>${ment ? `<td>${esc(r.mentoria_status || "")}</td>` : ""}</tr>`;
+  }).join("");
+}
+
+$("tb").addEventListener("click", e => {
+  const tr = e.target.closest("tr.row"); if (!tr) return;
+  const prox = tr.nextElementSibling;
+  if (prox?.classList.contains("detail")) { prox.remove(); return; }
+  const r = dados.find(x => x.id === tr.dataset.id); if (!r) return;
+  const item = (k, v) => v ? `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>` : "";
+  const notas = NOTAS.map(k => item(k, r.notas?.[k])).join("");
+  const d = document.createElement("tr"); d.className = "detail";
+  d.innerHTML = `<td colspan="7"><dl>${CAMPOS.map(([k,l]) => item(l, r[k])).join("")}${notas}</dl></td>`;
+  tr.after(d);
+});
+
+document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll(".tab").forEach(x => x.classList.toggle("on", x === b));
+  aba = b.dataset.t; pintar();
+}));
+$("q").addEventListener("input", pintar);
+</script>
+</body>
+</html>

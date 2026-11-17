@@ -10,7 +10,13 @@ service cloud.firestore {
                     && request.resource.data.nome is string
                     && request.resource.data.nome.size() < 200
                     && request.resource.data.size() < 30;
-      allow read, update, delete: if false;
+      // Só os dois e-mails abaixo (logados) podem ler as respostas.
+      allow read: if request.auth != null
+                  && request.auth.token.email in [
+                       'mauriciopinho@live.com',
+                       'visaoempreendedora.mkt2.0@gmail.com'
+                     ];
+      allow update, delete: if false;
     }
     match /{document=**} {
       allow read, write: if false;
