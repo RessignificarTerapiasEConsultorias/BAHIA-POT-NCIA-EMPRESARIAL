@@ -52,6 +52,35 @@ td.nw{white-space:nowrap}
 .detail dl{margin:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px 24px}
 .detail dt{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.05em}
 .detail dd{margin:2px 0 0;color:var(--white);word-break:break-word;white-space:pre-wrap}
+
+/* dashboard */
+.dash{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:16px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 22px}
+.panel.full{grid-column:1/-1}
+.panel h3{margin:0 0 4px;font-size:16px;font-weight:600}
+.panel .sub{color:var(--dim);font-size:13px;margin:0 0 16px}
+.hb{display:grid;grid-template-columns:minmax(110px,38%) 1fr auto;align-items:center;gap:6px 12px;margin:0}
+.hb .lb{font-size:13px;color:var(--soft);line-height:1.3}
+.hb .tr{height:14px;background:var(--surface-2);border-radius:4px;position:relative}
+.hb .fl{position:absolute;inset:0 auto 0 0;background:var(--copper);border-radius:0 4px 4px 0;min-width:2px}
+.hb .vl{font-size:13px;font-variant-numeric:tabular-nums;color:var(--white);min-width:76px;text-align:right}
+.hb .vl i{color:var(--dim);font-style:normal}
+.hb>*{cursor:default}.hb .tr:hover .fl{background:var(--copper-hi)}
+.col{display:flex;align-items:flex-end;gap:2px;height:190px;padding-top:10px}
+.col .c{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;gap:6px;min-width:0}
+.col .bar2{width:100%;background:var(--copper);border-radius:4px 4px 0 0;min-height:2px}
+.col .c:hover .bar2{background:var(--copper-hi)}
+.col .n{font-size:12px;color:var(--white);font-variant-numeric:tabular-nums}
+.axis{display:flex;gap:2px;margin-top:6px}.axis span{flex:1;text-align:center;font-size:12px;color:var(--soft)}
+.seg{display:flex;gap:2px;height:34px}
+.seg div{display:grid;place-items:center;font-size:13px;font-weight:600;color:#10100f;min-width:0;overflow:hidden}
+.seg div:first-child{border-radius:6px 0 0 6px}.seg div:last-child{border-radius:0 6px 6px 0}
+.leg{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px;font-size:13px;color:var(--soft)}
+.leg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px}
+.big{display:flex;gap:28px;flex-wrap:wrap;margin-bottom:18px;align-items:baseline}
+.big b{font-family:"Instrument Serif",serif;font-weight:400;font-size:64px;line-height:1}
+.big span{color:var(--soft);font-size:14px}
+#tip{position:fixed;z-index:9;pointer-events:none;background:#1b1511;border:1px solid var(--line-lit);border-radius:10px;padding:8px 12px;font-size:13px;line-height:1.4;max-width:300px;opacity:0;transition:opacity .08s}
 .empty{padding:40px;text-align:center;color:var(--dim)}
 </style>
 </head>
@@ -77,15 +106,18 @@ td.nw{white-space:nowrap}
   </header>
   <main>
     <div class="stats" id="stats"></div>
-    <div class="bar">
+    <div class="bar" id="bar">
       <div class="tabs">
-        <button class="tab on" data-t="todas">Todas as respostas</button>
+        <button class="tab on" data-t="dash">Dashboard</button>
+        <button class="tab" data-t="todas">Todas as respostas</button>
         <button class="tab" data-t="mentoria">Interesse em mentoria</button>
       </div>
-      <input type="search" id="q" placeholder="Buscar por nome, e-mail, Instagram…">
-      <span class="count" id="count"></span>
+      <input type="search" id="q" class="lista" placeholder="Buscar por nome, e-mail, Instagram…">
+      <span class="count lista" id="count"></span>
     </div>
-    <div class="wrap"><table><thead id="th"></thead><tbody id="tb"></tbody></table><div class="empty hide" id="empty">Nenhuma resposta encontrada.</div></div>
+    <div class="dash" id="dash"></div>
+    <div id="tip"></div>
+    <div class="wrap" id="wrap"><table><thead id="th"></thead><tbody id="tb"></tbody></table><div class="empty hide" id="empty">Nenhuma resposta encontrada.</div></div>
   </main>
 </section>
 
@@ -138,7 +170,7 @@ onAuthStateChanged(auth, async user => {
 });
 
 /* ---------- painel ---------- */
-let dados = [], aba = "todas";
+let dados = [], aba = "dash";
 const NOTAS = ["Conteúdo das palestras","Palestrantes","Organização e credenciamento","Estrutura do local (CECBA)","Networking com outros participantes","Custo-benefício do ingresso","Transformação Pessoal"];
 const CAMPOS = [["whatsapp","WhatsApp"],["ig_empresa","Instagram da empresa"],["ig_pessoal","Instagram pessoal"],["conheceu","Como conheceu o BPE"],["ingresso","Ingresso"],["marcou","O que mais marcou"],["palestrante","Palestrante que mais impactou"],["aplicou","Já aplicou o que aprendeu"],["acompanhamento","Interesse em acompanhamento"],["quer2027","O que quer ver em 2027"],["melhorar","O que podemos melhorar"],["avisado","Quer ser avisado do 1º lote"],["patrocinar","Interesse em patrocinar ou expor"]];
 
@@ -158,6 +190,11 @@ function pintar(){
   $("stats").innerHTML = [[todas.length,"respostas"],[score,"NPS"],[media,"nota média (0-10)"],[mentoria,"interesse em mentoria"],[patro,"querem patrocinar/expor"]]
     .map(([v,l]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join("");
 
+  const dash = aba === "dash";
+  $("dash").classList.toggle("hide", !dash);
+  $("wrap").classList.toggle("hide", dash);
+  document.querySelectorAll(".lista").forEach(x => x.classList.toggle("hide", dash));
+  if (dash) { dashboard(); return; }
   const ment = aba === "mentoria";
   $("th").innerHTML = "<tr><th>Data</th><th>Nome</th><th>E-mail</th><th>WhatsApp</th><th>Ingresso</th><th>Nota</th>" + (ment ? "<th>Status</th>" : "") + "</tr>";
   const busca = $("q").value.trim().toLowerCase();
@@ -169,6 +206,98 @@ function pintar(){
     return `<tr class="row" data-id="${esc(r.id)}"><td class="nw">${esc(data(r))}</td><td>${esc(r.nome)}</td><td>${esc(r.email)}</td><td class="nw">${esc(r.whatsapp)}</td><td>${esc(r.ingresso)}</td>
       <td class="nw">${n ?? ""} ${c ? `<span class="pill p-${c}">${c}</span>` : ""}</td>${ment ? `<td>${esc(r.mentoria_status || "")}</td>` : ""}</tr>`;
   }).join("");
+}
+
+/* ---------- dashboard ---------- */
+const NIVEL = {"Muito ruim":1,"Ruim":2,"Regular":3,"Bom":4,"Excelente":5};
+const COR = {Promotor:"#6FCF97",Neutro:"#9A8F85",Detrator:"#FF6B4A"};
+const pct = (n, t) => t ? Math.round(n / t * 1000) / 10 : 0;
+const fmt = n => String(n).replace(".", ",");
+const tip = $("tip");
+document.addEventListener("mousemove", e => {
+  const t = e.target.closest("[data-tip]");
+  if (!t) { tip.style.opacity = 0; return; }
+  tip.innerHTML = t.dataset.tip; tip.style.opacity = 1;
+  tip.style.left = Math.min(e.clientX + 14, innerWidth - 310) + "px"; tip.style.top = (e.clientY + 14) + "px";
+});
+
+function contar(vals, dividir){
+  const m = new Map();   // chave minúscula -> {nomes, n}
+  vals.forEach(v => (dividir ? String(v || "").split(";") : [v]).map(s => String(s ?? "").trim()).filter(Boolean)
+    .forEach(s => {
+      const k = s.toLowerCase(), e = m.get(k) || {n: 0, nomes: new Map()};
+      e.n++; e.nomes.set(s, (e.nomes.get(s) || 0) + 1); m.set(k, e);
+    }));
+  return [...m.values()].map(e => [[...e.nomes].sort((a, b) => b[1] - a[1])[0][0], e.n]).sort((a, b) => b[1] - a[1]);
+}
+/* itens citados uma única vez viram uma linha só */
+function agrupar(items, rotulo){
+  const fortes = items.filter(([, n]) => n > 1), resto = items.filter(([, n]) => n === 1).length;
+  return resto ? [...fortes, [rotulo + " (" + resto + " pessoas, 1 cada)", resto]] : fortes;
+}
+function barras(items, total, rotulo){
+  if (!items.length) return '<div class="empty">Sem dados.</div>';
+  const max = items[0][1];
+  return '<div class="hb">' + items.map(([k, n]) => {
+    const p = pct(n, total);
+    return `<div class="lb" data-tip="${esc(esc(k))}<br>${n} · ${fmt(p)}%">${esc(k)}</div>
+      <div class="tr" data-tip="${esc(esc(k))}<br>${n} · ${fmt(p)}%"><div class="fl" style="width:${n / max * 100}%"></div></div>
+      <div class="vl">${n} <i>${fmt(p)}%</i></div>`;
+  }).join("") + "</div>";
+}
+const painel = (t, s, corpo, full) => `<section class="panel${full ? " full" : ""}"><h3>${t}</h3><p class="sub">${s}</p>${corpo}</section>`;
+
+function dashboard(){
+  const T = dados.length;
+  if (!T) { $("dash").innerHTML = '<div class="empty">Ainda não há respostas.</div>'; return; }
+  const ns = dados.map(nps).filter(n => n !== null);
+  const g = {Promotor: 0, Neutro: 0, Detrator: 0};
+  ns.forEach(n => g[n >= 9 ? "Promotor" : n >= 7 ? "Neutro" : "Detrator"]++);
+  const score = Math.round((g.Promotor - g.Detrator) / ns.length * 100);
+  const media = (ns.reduce((a, b) => a + b, 0) / ns.length).toFixed(1);
+
+  /* NPS */
+  const seg = Object.entries(g).filter(([, n]) => n).map(([k, n]) =>
+    `<div style="flex:${n};background:${COR[k]}" data-tip="${k}<br>${n} · ${fmt(pct(n, ns.length))}%">${pct(n, ns.length) >= 8 ? fmt(pct(n, ns.length)) + "%" : ""}</div>`).join("");
+  const leg = Object.entries(g).map(([k, n]) => `<span><i style="background:${COR[k]}"></i>${k} · ${n}</span>`).join("");
+  const pNps = painel("NPS", "Promotores (9–10) menos detratores (0–6), sobre " + ns.length + " notas.",
+    `<div class="big"><div><b style="color:var(--copper-hi)">${score}</b><br><span>pontuação NPS</span></div><div><b>${fmt(media)}</b><br><span>nota média (0–10)</span></div></div>
+     <div class="seg">${seg}</div><div class="leg">${leg}</div>`);
+
+  /* distribuição das notas */
+  const dist = Array.from({length: 11}, (_, i) => ns.filter(n => n === i).length), mx = Math.max(...dist);
+  const pDist = painel("Distribuição das notas", "Quantas pessoas deram cada nota de 0 a 10.",
+    `<div class="col">${dist.map((n, i) => `<div class="c" data-tip="Nota ${i}<br>${n} · ${fmt(pct(n, ns.length))}%"><span class="n">${n || ""}</span><div class="bar2" style="height:${mx ? n / mx * 78 : 0}%"></div></div>`).join("")}</div>
+     <div class="axis">${dist.map((_, i) => `<span>${i}</span>`).join("")}</div>`);
+
+  /* critérios */
+  const crit = NOTAS.map(k => {
+    const v = dados.map(r => NIVEL[r.notas?.[k]]).filter(Boolean);
+    const cont = [5,4,3,2,1].map(l => v.filter(x => x === l).length);
+    return [k, v.length ? v.reduce((a, b) => a + b, 0) / v.length : 0, v.length, cont];
+  }).sort((a, b) => b[1] - a[1]);
+  const nomes = ["Excelente","Bom","Regular","Ruim","Muito ruim"];
+  const pCrit = painel("Avaliação por critério", "Média de 1 (muito ruim) a 5 (excelente). Passe o mouse para ver a distribuição.",
+    `<div class="hb">${crit.map(([k, m, n, c]) => {
+      const tt = esc(esc(k)) + "<br>" + nomes.map((x, i) => `${x}: ${c[i]}`).join("<br>");
+      return `<div class="lb" data-tip="${tt}">${esc(k)}</div><div class="tr" data-tip="${tt}"><div class="fl" style="width:${m / 5 * 100}%"></div></div><div class="vl">${fmt(m.toFixed(2))} <i>/ 5</i></div>`;
+    }).join("")}</div>`, true);
+
+  /* categorias */
+  const bloco = (campo, dividir) => barras(contar(dados.map(r => r[campo]), dividir), T);
+  const quer = contar(dados.map(r => r.quer2027), true);
+  const html = [
+    pNps, pDist, pCrit,
+    painel("Como conheceu o BPE", "Canal de origem.", bloco("conheceu")),
+    painel("Tipo de ingresso", "Quem respondeu, por ingresso.", bloco("ingresso")),
+    painel("O que querem ver em 2027", "Múltipla escolha, a soma passa de 100%. Sugestões citadas uma vez ficam agrupadas.", barras(agrupar(quer, "Outras sugestões em texto livre"), T)),
+    painel("Já aplicou o que aprendeu?", "", bloco("aplicou")),
+    painel("Interesse em acompanhamento", "", bloco("acompanhamento")),
+    painel("Quer ser avisado do 1º lote?", "", bloco("avisado")),
+    painel("Interesse em patrocinar ou expor", "", bloco("patrocinar")),
+    painel("Palestrante que mais impactou", "Texto livre; nomes escritos com maiúsculas diferentes são somados.", barras(contar(dados.map(r => r.palestrante)).slice(0, 12), T))
+  ].join("");
+  $("dash").innerHTML = html;
 }
 
 $("tb").addEventListener("click", e => {
